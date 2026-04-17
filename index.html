@@ -162,6 +162,7 @@
     }
     .day.empty { background: #F8FBFD; }
     .day.past  { opacity: 0.35; }
+    .day.full  { opacity: 0.35; }
 
     .day-num {
       width: 28px; height: 28px;
@@ -379,19 +380,23 @@
   //   マイカレンダーに「AM✗」             → PM空きあり（午前が×）
   //   マイカレンダーに「PM✗」             → AM空きあり（午後が×）
   //   マイカレンダーに何もなし             → 空きあり（デフォルト）
+  // イベントが指定日をカバーするか判定（複数日イベント対応）
+  function eventCoversDay(ev, key) {
+    const s = ev.start?.date || (ev.start?.dateTime || '').slice(0, 10);
+    const e = ev.end?.date   || (ev.end?.dateTime   || '').slice(0, 10);
+    if (e && e > s) {
+      return key >= s && key < e; // 終了日は排他（Googleカレンダーの仕様）
+    }
+    return s === key;
+  }
+
   function dayStatus(myEvents, clinicEvents, y, m, d) {
     const key = `${y}-${String(m + 1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
 
-    const hasClinic = clinicEvents.some(ev => {
-      const s = ev.start?.date || (ev.start?.dateTime || '').slice(0, 10);
-      return s === key;
-    });
+    const hasClinic = clinicEvents.some(ev => eventCoversDay(ev, key));
     if (hasClinic) return 'none';
 
-    const myHits = myEvents.filter(ev => {
-      const s = ev.start?.date || (ev.start?.dateTime || '').slice(0, 10);
-      return s === key;
-    });
+    const myHits = myEvents.filter(ev => eventCoversDay(ev, key));
     if (!myHits.length) return 'open'; // 何もなければ空きあり
 
     const t = myHits.map(ev => ev.summary || '').join(' ');
@@ -441,10 +446,11 @@
       if (dow === 6) cls += ' sat';
       if (isToday)   cls += ' today';
       if (isPast)    cls += ' past';
+      if (!isPast && status === 'none') cls += ' full'; // 空きなし日も暗く
 
       html += `<div class="${cls}">
         <div class="day-num">${d}</div>
-        ${BADGE[status]}
+        ${isPast ? '' : BADGE[status]}
       </div>`;
     }
     document.getElementById('daysGrid').innerHTML = html;
