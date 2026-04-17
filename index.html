@@ -340,10 +340,11 @@
 
 <script>
   // ================================================================
-  // 設定（公開時に正式な値を入力してください）
+  // 設定
   // ================================================================
-  const API_KEY     = 'AIzaSyA8FwJqEcodRUgZFY-zJtzZCyyH19yqwjw';
-  const CALENDAR_ID = 'kumamotonsc01@gmail.com';
+  const API_KEY          = 'AIzaSyA8FwJqEcodRUgZFY-zJtzZCyyH19yqwjw';
+  const CALENDAR_MY      = 'kumamotonsc01@gmail.com'; // マイカレンダー
+  const CALENDAR_CLINIC  = '25cf731bd54f6d839e8b8a048e60939b0bf10634f2d279174b468a7d7825d93c@group.calendar.google.com'; // 診療所カレンダー
   // ================================================================
 
   const MONTHS_JP = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
@@ -352,10 +353,11 @@
   let year  = now.getFullYear();
   let month = now.getMonth();
 
-  async function fetchEvents(y, m) {
+  // 指定カレンダーのイベントを取得
+  async function fetchEvents(calendarId, y, m) {
     const timeMin = new Date(y, m, 1).toISOString();
     const timeMax = new Date(y, m + 1, 0, 23, 59, 59).toISOString();
-    const url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(CALENDAR_ID)}/events`
+    const url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events`
       + `?key=${API_KEY}`
       + `&timeMin=${encodeURIComponent(timeMin)}`
       + `&timeMax=${encodeURIComponent(timeMax)}`
@@ -371,25 +373,32 @@
   }
 
   // 指定日のステータス判定
-  // Googleカレンダーのイベントタイトルに以下を含む場合に対応：
-  //   「空きあり」→ 空きあり（緑）
-  //   「空きなし」「満枠」「予約済」→ 空きなし（赤）
-  //   「AM」「午前」→ AM空きあり（青）
-  //   「PM」「午後」→ PM空きあり（オレンジ）
-  function dayStatus(events, y, m, d) {
+  // ルール：
+  //   診療所カレンダーにイベントあり       → 空きなし
+  //   マイカレンダーに「✗」               → 空きなし
+  //   マイカレンダーに「AM✗」             → PM空きあり（午前が×）
+  //   マイカレンダーに「PM✗」             → AM空きあり（午後が×）
+  //   マイカレンダーに何もなし             → 空きあり（デフォルト）
+  function dayStatus(myEvents, clinicEvents, y, m, d) {
     const key = `${y}-${String(m + 1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    const hits = events.filter(ev => {
+
+    const hasClinic = clinicEvents.some(ev => {
       const s = ev.start?.date || (ev.start?.dateTime || '').slice(0, 10);
       return s === key;
     });
-    if (!hits.length) return null;
+    if (hasClinic) return 'none';
 
-    const t = hits.map(ev => ev.summary || '').join(' ');
-    if (/AM|午前/.test(t))                        return 'am';
-    if (/PM|午後/.test(t))                        return 'pm';
-    if (/空きあり/.test(t))                       return 'open';
-    if (/空きなし|満枠|予約済/.test(t))           return 'none';
-    return null;
+    const myHits = myEvents.filter(ev => {
+      const s = ev.start?.date || (ev.start?.dateTime || '').slice(0, 10);
+      return s === key;
+    });
+    if (!myHits.length) return 'open'; // 何もなければ空きあり
+
+    const t = myHits.map(ev => ev.summary || '').join(' ');
+    if (t.includes('AM✗')) return 'pm';  // AM✗ → PM空きあり
+    if (t.includes('PM✗')) return 'am';  // PM✗ → AM空きあり
+    if (t.includes('✗'))   return 'none'; // ✗ → 空きなし
+    return 'open'; // それ以外のイベントは空きあり
   }
 
   const BADGE = {
@@ -405,7 +414,12 @@
     document.getElementById('daysGrid').innerHTML =
       '<div class="loading-wrap"><div class="spinner"></div><br>読み込み中...</div>';
 
-    const events   = await fetchEvents(year, month);
+    // 2つのカレンダーを並行取得
+    const [myEvents, clinicEvents] = await Promise.all([
+      fetchEvents(CALENDAR_MY, year, month),
+      fetchEvents(CALENDAR_CLINIC, year, month),
+    ]);
+
     const today    = new Date();
     const firstDow = new Date(year, month, 1).getDay();
     const lastDay  = new Date(year, month + 1, 0).getDate();
@@ -416,11 +430,11 @@
       html += '<div class="day empty"></div>';
     }
     for (let d = 1; d <= lastDay; d++) {
-      const date   = new Date(year, month, d);
-      const dow    = date.getDay();
+      const date    = new Date(year, month, d);
+      const dow     = date.getDay();
       const isToday = date.toDateString() === todayStr;
       const isPast  = date < new Date(today.getFullYear(), today.getMonth(), today.getDate());
-      const status  = dayStatus(events, year, month, d);
+      const status  = dayStatus(myEvents, clinicEvents, year, month, d);
 
       let cls = 'day';
       if (dow === 0) cls += ' sun';
@@ -430,7 +444,7 @@
 
       html += `<div class="${cls}">
         <div class="day-num">${d}</div>
-        ${status ? BADGE[status] : ''}
+        ${BADGE[status]}
       </div>`;
     }
     document.getElementById('daysGrid').innerHTML = html;
