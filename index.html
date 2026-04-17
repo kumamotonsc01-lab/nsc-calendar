@@ -65,10 +65,11 @@
     }
 
     .header-clinic {
-      font-size: 11px;
+      font-size: 14px;
       color: #5A8AB0;
-      letter-spacing: 0.1em;
+      letter-spacing: 0.08em;
       margin-bottom: 5px;
+      font-weight: 600;
     }
     .header-title {
       font-size: 18px;
@@ -183,20 +184,35 @@
       color: #fff;
     }
 
-    /* ステータスバッジ */
-    .badge {
-      font-size: 8.5px;
+    /* ステータス表示（記号＋ラベル） */
+    .status {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      line-height: 1.2;
+    }
+    .s-sym {
+      font-size: 16px;
       font-weight: bold;
-      padding: 2px 5px;
-      border-radius: 8px;
-      line-height: 1.45;
-      letter-spacing: 0.02em;
+      line-height: 1;
+    }
+    .s-lbl {
+      font-size: 7px;
+      font-weight: bold;
+      margin-top: 2px;
+      letter-spacing: 0.01em;
       white-space: nowrap;
     }
-    .b-open  { background: #E8F5E9; color: #2E7D32; }   /* 緑：空きあり */
-    .b-none  { background: #FFEBEE; color: #C62828; }   /* 赤：空きなし */
-    .b-am    { background: #E3F2FD; color: #1565C0; }   /* 青：AM空きあり */
-    .b-pm    { background: #FFF3E0; color: #E65100; }   /* オレンジ：PM空きあり */
+    .status.open .s-sym, .status.open .s-lbl { color: #2E7D32; }
+    .status.none .s-sym, .status.none .s-lbl { color: #C62828; }
+    .status.am   .s-sym, .status.am   .s-lbl { color: #1565C0; }
+    .status.pm   .s-sym, .status.pm   .s-lbl { color: #E65100; }
+
+    /* 凡例チップ（記号＋テキスト） */
+    .b-open  { background: #E8F5E9; color: #2E7D32; }
+    .b-none  { background: #FFEBEE; color: #C62828; }
+    .b-am    { background: #E3F2FD; color: #1565C0; }
+    .b-pm    { background: #FFF3E0; color: #E65100; }
 
     /* ── 凡例 ── */
     .legend {
@@ -275,8 +291,8 @@
     <div class="header-inner">
       <div class="header-clinic">にじのはしスペイクリニック 熊本分院</div>
       <div class="header-title">
-        予約状況カレンダー
-        <span>Reservation Calendar</span>
+        空き状況カレンダー
+        <span>Availability Calendar</span>
       </div>
     </div>
   </header>
@@ -309,26 +325,26 @@
   <!-- 凡例 -->
   <div class="legend">
     <div class="legend-item">
-      <span class="legend-chip b-open">空きあり</span>
+      <span class="legend-chip b-open">◯ 空きあり</span>
       <span>終日予約可</span>
     </div>
     <div class="legend-item">
-      <span class="legend-chip b-none">空きなし</span>
+      <span class="legend-chip b-none">✗ 空きなし</span>
       <span>満枠</span>
     </div>
     <div class="legend-item">
-      <span class="legend-chip b-am">AM空きあり</span>
+      <span class="legend-chip b-am">△ AM空きあり</span>
       <span>午前のみ可</span>
     </div>
     <div class="legend-item">
-      <span class="legend-chip b-pm">PM空きあり</span>
+      <span class="legend-chip b-pm">△ PM空きあり</span>
       <span>午後のみ可</span>
     </div>
   </div>
 
   <!-- お知らせ -->
   <div class="notice">
-    予約はLINEにてお受けしています
+    予約はLINEのチャットでご連絡ください
   </div>
 
   <!-- フッター -->
@@ -407,10 +423,10 @@
   }
 
   const BADGE = {
-    open: '<span class="badge b-open">空きあり</span>',
-    none: '<span class="badge b-none">空きなし</span>',
-    am:   '<span class="badge b-am">AM空きあり</span>',
-    pm:   '<span class="badge b-pm">PM空きあり</span>',
+    open: '<div class="status open"><span class="s-sym">◯</span><span class="s-lbl">空きあり</span></div>',
+    none: '<div class="status none"><span class="s-sym">✗</span><span class="s-lbl">空きなし</span></div>',
+    am:   '<div class="status am"><span class="s-sym">△</span><span class="s-lbl">AM空きあり</span></div>',
+    pm:   '<div class="status pm"><span class="s-sym">△</span><span class="s-lbl">PM空きあり</span></div>',
   };
 
   async function render() {
