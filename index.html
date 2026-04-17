@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>予約状況 | にじのはしSC熊本分院</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    /* NSCカラー定義 */
+    :root {
+      --blue-main:   #4A8FD4;   /* NSCロゴの青 */
+      --blue-light:  #C8E2F5;   /* 背景の薄い水色 */
+      --blue-pale:   #EAF4FC;   /* 極薄水色 */
+      --blue-dark:   #2E6FAD;   /* 濃い青（ホバー等） */
+      --bg:          #F4F8FB;   /* ページ背景 */
+    }
+
+    body {
+      font-family: 'Hiragino Kaku Gothic ProN', 'ヒラギノ角ゴ ProN W3', 'Meiryo', sans-serif;
+      background: var(--bg);
+      color: #333;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+    }
+
+    /* ── 全体コンテナ（横幅制限） ── */
+    .container {
+      width: 100%;
+      max-width: 400px;
+      padding: 0 0 24px;
+    }
+
+    /* ── ヘッダー ── */
+    header {
+      background: linear-gradient(160deg, #B8DDEF 0%, #D8EEFA 50%, #EAF4FC 100%);
+      padding: 24px 20px 28px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    /* 背景の装飾アーク（NSCサイトの背景モチーフ） */
+    header::before {
+      content: '';
+      position: absolute;
+      width: 280px; height: 280px;
+      border-radius: 50%;
+      border: 40px solid rgba(74,143,212,0.10);
+      top: -80px; right: -60px;
+      pointer-events: none;
+    }
+    header::after {
+      content: '';
+      position: absolute;
+      width: 200px; height: 200px;
+      border-radius: 50%;
+      border: 30px solid rgba(74,143,212,0.07);
+      top: -30px; right: -10px;
+      pointer-events: none;
+    }
+    .header-inner {
+      position: relative;
+      z-index: 1;
+    }
+
+    .header-clinic {
+      font-size: 11px;
+      color: #5A8AB0;
+      letter-spacing: 0.1em;
+      margin-bottom: 5px;
+    }
+    .header-title {
+      font-size: 18px;
+      font-weight: bold;
+      color: var(--blue-dark);
+      letter-spacing: 0.04em;
+      white-space: nowrap;
+    }
+    .header-title span {
+      display: block;
+      font-size: 10px;
+      font-weight: normal;
+      color: #7AAAC8;
+      letter-spacing: 0.1em;
+      margin-top: 3px;
+    }
+
+    /* ── 月ナビゲーション ── */
+    .nav-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #fff;
+      padding: 12px 16px;
+      border-bottom: 2px solid var(--blue-pale);
+    }
+    .nav-btn {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      border: 2px solid var(--blue-main);
+      background: transparent;
+      color: var(--blue-main);
+      font-size: 20px;
+      line-height: 1;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      -webkit-tap-highlight-color: transparent;
+      transition: background 0.15s, color 0.15s;
+    }
+    .nav-btn:active { background: var(--blue-main); color: #fff; }
+    .month-label {
+      font-size: 17px;
+      font-weight: bold;
+      color: var(--blue-dark);
+      letter-spacing: 0.05em;
+      white-space: nowrap;
+    }
+
+    /* ── カレンダー本体 ── */
+    .calendar-wrap {
+      margin: 12px 10px 0;
+      background: #fff;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 2px 12px rgba(74,143,212,0.12);
+    }
+    /* 曜日ヘッダー */
+    .weekdays {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      background: var(--blue-pale);
+      border-bottom: 1px solid var(--blue-light);
+    }
+    .wd {
+      text-align: center;
+      padding: 8px 2px;
+      font-size: 11px;
+      font-weight: bold;
+      color: #7AAAC8;
+      letter-spacing: 0.04em;
+    }
+    .wd.sun { color: #E07070; }
+    .wd.sat { color: #5A9AD4; }
+
+    /* 日付グリッド */
+    .days-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 1px;
+      background: #D8EAF5;
+    }
+    .day {
+      background: #fff;
+      min-height: 64px;
+      padding: 6px 2px 4px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .day.empty { background: #F8FBFD; }
+    .day.past  { opacity: 0.35; }
+
+    .day-num {
+      width: 28px; height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 600;
+      color: #444;
+      border-radius: 50%;
+      margin-bottom: 4px;
+      flex-shrink: 0;
+    }
+    .day.sun .day-num { color: #D96060; }
+    .day.sat .day-num { color: #4A8FD4; }
+    .day.today .day-num {
+      background: var(--blue-main);
+      color: #fff;
+    }
+
+    /* ステータスバッジ */
+    .badge {
+      font-size: 8.5px;
+      font-weight: bold;
+      padding: 2px 5px;
+      border-radius: 8px;
+      line-height: 1.45;
+      letter-spacing: 0.02em;
+      white-space: nowrap;
+    }
+    .b-open  { background: #E8F5E9; color: #2E7D32; }   /* 緑：空きあり */
+    .b-none  { background: #FFEBEE; color: #C62828; }   /* 赤：空きなし */
+    .b-am    { background: #E3F2FD; color: #1565C0; }   /* 青：AM空きあり */
+    .b-pm    { background: #FFF3E0; color: #E65100; }   /* オレンジ：PM空きあり */
+
+    /* ── 凡例 ── */
+    .legend {
+      margin: 10px 10px 0;
+      padding: 12px 14px;
+      background: #fff;
+      border-radius: 14px;
+      box-shadow: 0 2px 8px rgba(74,143,212,0.10);
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px 12px;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 11px;
+      color: #555;
+    }
+    .legend-chip {
+      font-size: 8.5px;
+      font-weight: bold;
+      padding: 2px 7px;
+      border-radius: 8px;
+      white-space: nowrap;
+    }
+
+    /* ── お知らせ ── */
+    .notice {
+      margin: 10px 10px 0;
+      padding: 12px 14px;
+      background: #fff;
+      border-radius: 14px;
+      box-shadow: 0 2px 8px rgba(74,143,212,0.10);
+      font-size: 11px;
+      color: #777;
+      line-height: 1.8;
+      text-align: center;
+    }
+
+    /* ── フッター ── */
+    footer {
+      text-align: center;
+      padding: 18px 16px 8px;
+      font-size: 10px;
+      color: #A0BAD0;
+      line-height: 1.8;
+    }
+
+    /* ── ローディング ── */
+    .loading-wrap {
+      grid-column: span 7;
+      padding: 30px;
+      text-align: center;
+      color: #aaa;
+      font-size: 12px;
+      background: #fff;
+    }
+    .spinner {
+      display: inline-block;
+      width: 20px; height: 20px;
+      border: 3px solid #D8EAF5;
+      border-top-color: var(--blue-main);
+      border-radius: 50%;
+      animation: spin 0.75s linear infinite;
+      margin-bottom: 6px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <!-- ヘッダー -->
+  <header>
+    <div class="header-inner">
+      <div class="header-clinic">にじのはしスペイクリニック 熊本分院</div>
+      <div class="header-title">
+        予約状況カレンダー
+        <span>Reservation Calendar</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- 月ナビゲーション -->
+  <div class="nav-bar">
+    <button class="nav-btn" id="prevBtn">&#8249;</button>
+    <div class="month-label" id="monthLabel">読み込み中...</div>
+    <button class="nav-btn" id="nextBtn">&#8250;</button>
+  </div>
+
+  <!-- カレンダー -->
+  <div class="calendar-wrap">
+    <div class="weekdays">
+      <div class="wd sun">日</div>
+      <div class="wd">月</div>
+      <div class="wd">火</div>
+      <div class="wd">水</div>
+      <div class="wd">木</div>
+      <div class="wd">金</div>
+      <div class="wd sat">土</div>
+    </div>
+    <div class="days-grid" id="daysGrid">
+      <div class="loading-wrap">
+        <div class="spinner"></div><br>読み込み中...
+      </div>
+    </div>
+  </div>
+
+  <!-- 凡例 -->
+  <div class="legend">
+    <div class="legend-item">
+      <span class="legend-chip b-open">空きあり</span>
+      <span>終日予約可</span>
+    </div>
+    <div class="legend-item">
+      <span class="legend-chip b-none">空きなし</span>
+      <span>満枠</span>
+    </div>
+    <div class="legend-item">
+      <span class="legend-chip b-am">AM空きあり</span>
+      <span>午前のみ可</span>
+    </div>
+    <div class="legend-item">
+      <span class="legend-chip b-pm">PM空きあり</span>
+      <span>午後のみ可</span>
+    </div>
+  </div>
+
+  <!-- お知らせ -->
+  <div class="notice">
+    予約はLINEにてお受けしています
+  </div>
+
+  <!-- フッター -->
+  <footer>
+    © にじのはしスペイクリニック熊本分院<br>
+    猫の不妊去勢手術専門病院
+  </footer>
+
+</div><!-- /container -->
+
+<script>
+  // ================================================================
+  // 設定（公開時に正式な値を入力してください）
+  // ================================================================
+  const API_KEY     = 'AIzaSyA8FwJqEcodRUgZFY-zJtzZCyyH19yqwjw';
+  const CALENDAR_ID = 'kumamotonsc01@gmail.com';
+  // ================================================================
+
+  const MONTHS_JP = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+
+  let now   = new Date();
+  let year  = now.getFullYear();
+  let month = now.getMonth();
+
+  async function fetchEvents(y, m) {
+    const timeMin = new Date(y, m, 1).toISOString();
+    const timeMax = new Date(y, m + 1, 0, 23, 59, 59).toISOString();
+    const url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(CALENDAR_ID)}/events`
+      + `?key=${API_KEY}`
+      + `&timeMin=${encodeURIComponent(timeMin)}`
+      + `&timeMax=${encodeURIComponent(timeMax)}`
+      + `&singleEvents=true&orderBy=startTime&maxResults=100`;
+    try {
+      const res  = await fetch(url);
+      const data = await res.json();
+      return data.items || [];
+    } catch (e) {
+      console.error('Calendar fetch error:', e);
+      return [];
+    }
+  }
+
+  // 指定日のステータス判定
+  // Googleカレンダーのイベントタイトルに以下を含む場合に対応：
+  //   「空きあり」→ 空きあり（緑）
+  //   「空きなし」「満枠」「予約済」→ 空きなし（赤）
+  //   「AM」「午前」→ AM空きあり（青）
+  //   「PM」「午後」→ PM空きあり（オレンジ）
+  function dayStatus(events, y, m, d) {
+    const key = `${y}-${String(m + 1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const hits = events.filter(ev => {
+      const s = ev.start?.date || (ev.start?.dateTime || '').slice(0, 10);
+      return s === key;
+    });
+    if (!hits.length) return null;
+
+    const t = hits.map(ev => ev.summary || '').join(' ');
+    if (/AM|午前/.test(t))                        return 'am';
+    if (/PM|午後/.test(t))                        return 'pm';
+    if (/空きあり/.test(t))                       return 'open';
+    if (/空きなし|満枠|予約済/.test(t))           return 'none';
+    return null;
+  }
+
+  const BADGE = {
+    open: '<span class="badge b-open">空きあり</span>',
+    none: '<span class="badge b-none">空きなし</span>',
+    am:   '<span class="badge b-am">AM空きあり</span>',
+    pm:   '<span class="badge b-pm">PM空きあり</span>',
+  };
+
+  async function render() {
+    document.getElementById('monthLabel').textContent =
+      `${year}年 ${MONTHS_JP[month]}`;
+    document.getElementById('daysGrid').innerHTML =
+      '<div class="loading-wrap"><div class="spinner"></div><br>読み込み中...</div>';
+
+    const events   = await fetchEvents(year, month);
+    const today    = new Date();
+    const firstDow = new Date(year, month, 1).getDay();
+    const lastDay  = new Date(year, month + 1, 0).getDate();
+    const todayStr = today.toDateString();
+
+    let html = '';
+    for (let i = 0; i < firstDow; i++) {
+      html += '<div class="day empty"></div>';
+    }
+    for (let d = 1; d <= lastDay; d++) {
+      const date   = new Date(year, month, d);
+      const dow    = date.getDay();
+      const isToday = date.toDateString() === todayStr;
+      const isPast  = date < new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      const status  = dayStatus(events, year, month, d);
+
+      let cls = 'day';
+      if (dow === 0) cls += ' sun';
+      if (dow === 6) cls += ' sat';
+      if (isToday)   cls += ' today';
+      if (isPast)    cls += ' past';
+
+      html += `<div class="${cls}">
+        <div class="day-num">${d}</div>
+        ${status ? BADGE[status] : ''}
+      </div>`;
+    }
+    document.getElementById('daysGrid').innerHTML = html;
+  }
+
+  document.getElementById('prevBtn').addEventListener('click', () => {
+    if (--month < 0) { month = 11; year--; }
+    render();
+  });
+  document.getElementById('nextBtn').addEventListener('click', () => {
+    if (++month > 11) { month = 0; year++; }
+    render();
+  });
+
+  render();
+</script>
+</body>
+</html>
