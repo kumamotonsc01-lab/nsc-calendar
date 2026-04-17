@@ -395,9 +395,9 @@
     if (!myHits.length) return 'open'; // 何もなければ空きあり
 
     const t = myHits.map(ev => ev.summary || '').join(' ');
-    if (t.includes('AM✗')) return 'pm';  // AM✗ → PM空きあり
-    if (t.includes('PM✗')) return 'am';  // PM✗ → AM空きあり
-    if (t.includes('✗'))   return 'none'; // ✗ → 空きなし
+    if (t.includes('AM×') || t.includes('AM✗')) return 'pm';  // AM× → PM空きあり
+    if (t.includes('PM×') || t.includes('PM✗')) return 'am';  // PM× → AM空きあり
+    if (t.includes('×')   || t.includes('✗'))   return 'none'; // × → 空きなし
     return 'open'; // それ以外のイベントは空きあり
   }
 
