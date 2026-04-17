@@ -195,12 +195,9 @@
     }
     .s-sym {
       font-size: 16px;
-      font-weight: normal;
+      font-weight: 300;
       line-height: 1;
-    }
-    /* ✗は他の記号より視覚的に大きく見えるためやや小さく調整 */
-    .status.none .s-sym {
-      font-size: 13px;
+      display: block;
     }
     .s-lbl {
       font-size: 7px;
@@ -335,7 +332,7 @@
       <span>終日予約可</span>
     </div>
     <div class="legend-item">
-      <span class="legend-chip b-none">✗ 空きなし</span>
+      <span class="legend-chip b-none">✕ 空きなし</span>
       <span>満枠</span>
     </div>
     <div class="legend-item">
@@ -430,7 +427,7 @@
 
   const BADGE = {
     open: '<div class="status open"><span class="s-sym">◯</span><span class="s-lbl">空きあり</span></div>',
-    none: '<div class="status none"><span class="s-sym">✗</span><span class="s-lbl">空きなし</span></div>',
+    none: '<div class="status none"><span class="s-sym">✕</span><span class="s-lbl">空きなし</span></div>',
     am:   '<div class="status am"><span class="s-sym">△</span><span class="s-lbl">AM空きあり</span></div>',
     pm:   '<div class="status pm"><span class="s-sym">△</span><span class="s-lbl">PM空きあり</span></div>',
   };
